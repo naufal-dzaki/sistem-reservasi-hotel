@@ -34,12 +34,17 @@ typedef struct {
 void createGuestList(Guest **head);
 void createRoomTree(RoomNode **root);
 void createQueue(Queue *queue);
+int isIDUnique(Guest *head, char *id);
+void inputUniqueID(Guest *guestList, char *id);
+void addGuest(Guest **head, char *name, char *id, char *phone);
+void displayGuests(Guest *head);
 
 int main() {
     Guest *guestList = NULL;
     RoomNode *roomTree = NULL;
     Queue queue;
     int choice;
+    char name[50], id[20], phone[15];
 
     createGuestList(&guestList);
     createRoomTree(&roomTree);
@@ -65,8 +70,20 @@ int main() {
 
         switch (choice) {
             case 1:
+                printf("Masukkan nama: ");
+                fflush(stdin);
+                fgets(name, sizeof(name), stdin);
+                name[strcspn(name, "\n")] = 0;
+                inputUniqueID(guestList, id);
+                printf("Masukkan telepon: ");
+                fgets(phone, sizeof(phone), stdin);
+                phone[strcspn(phone, "\n")] = 0;
+                addGuest(&guestList, name, id, phone);
+                getch();
                 break;
             case 2:
+                displayGuests(guestList);
+                getch();
                 break;
 			case 3:
 			    break;
@@ -107,4 +124,71 @@ void createRoomTree(RoomNode **root) {
 void createQueue(Queue *queue) {
     queue->front = queue->rear = NULL;
     queue->count = 0;
+}
+
+int isIDUnique(Guest *head, char *id) {
+    Guest *temp = head;
+    while (temp != NULL) {
+        if (strcmp(temp->id, id) == 0) {
+            return 0;
+        }
+        temp = temp->next;
+    }
+    return 1;
+}
+
+void inputUniqueID(Guest *guestList, char *id) {
+    int isUnique = 0;
+
+    do {
+        printf("Masukkan ID: ");
+
+        fgets(id, sizeof(id), stdin);
+        id[strcspn(id, "\n")] = 0;
+
+        if (isIDUnique(guestList, id)) {
+            isUnique = 1;
+        } else {
+            printf("ID %s sudah digunakan. Silakan masukkan ID yang berbeda.\n", id);
+        }
+    } while (!isUnique);
+}
+
+void addGuest(Guest **head, char *name, char *id, char *phone) {
+    Guest *newGuest = (Guest *)malloc(sizeof(Guest));
+    if (!newGuest) {
+        printf("Alokasi memori gagal untuk tamu baru.\n");
+        return;
+    }
+
+    strcpy(newGuest->name, name);
+    strcpy(newGuest->id, id);
+    strcpy(newGuest->phone, phone);
+    newGuest->room = NULL;
+
+    newGuest->next = *head;
+    *head = newGuest;
+
+    printf("Tamu berhasil ditambahkan.\n");
+}
+
+void displayGuests(Guest *head) {
+    if (head == NULL) {
+        printf("Daftar tamu kosong.\n");
+        return;
+    }
+
+    Guest *temp = head;
+    printf("+-------------------+-------------------+-------------------+-------------------+\n");
+    printf("| %-17s | %-17s | %-17s | %-17s |\n", "Nama", "ID", "Telepon", "Kamar");
+    printf("+-------------------+-------------------+-------------------+-------------------+\n");
+
+    while (temp != NULL) {
+        printf("| %-17s | %-17s | %-17s | %-17s |\n", 
+               temp->name, temp->id, temp->phone, 
+               temp->room ? temp->room->roomNumber : "Belum Check-in");
+        temp = temp->next;
+    }
+
+    printf("+-------------------+-------------------+-------------------+-------------------+\n");
 }
