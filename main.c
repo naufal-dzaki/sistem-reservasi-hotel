@@ -38,6 +38,10 @@ int isIDUnique(Guest *head, char *id);
 void inputUniqueID(Guest *guestList, char *id);
 void addGuest(Guest **head, char *name, char *id, char *phone);
 void displayGuests(Guest *head);
+void addRoom(RoomNode **root, char *roomType, char *roomNumber);
+void initRoomData(RoomNode **root);
+void displayRooms(RoomNode *root);
+void displayAvailableRooms(RoomNode *root);
 
 int main() {
     Guest *guestList = NULL;
@@ -49,6 +53,7 @@ int main() {
     createGuestList(&guestList);
     createRoomTree(&roomTree);
     createQueue(&queue);
+    initRoomData(&roomTree);
 
     do {
         system("cls");
@@ -86,10 +91,33 @@ int main() {
                 getch();
                 break;
 			case 3:
+			    printf("Masukkan tipe kamar: ");
+			    fflush(stdin);
+			    fgets(name, sizeof(name), stdin);
+			    name[strcspn(name, "\n")] = 0;
+			
+			    printf("Masukkan nomor kamar: ");
+			    fgets(id, sizeof(id), stdin);
+			    id[strcspn(id, "\n")] = 0;
+			
+			    addRoom(&roomTree, name, id);
+			    getch();
 			    break;
             case 4:
+                printf("+-------------------+-------------------+-------------------+\n");
+                printf("| %-17s | %-17s | %-17s |\n", "Nomor Kamar", "Tipe Kamar", "Status");
+                printf("+-------------------+-------------------+-------------------+\n");
+                displayRooms(roomTree);
+                printf("+-------------------+-------------------+-------------------+\n");
+                getch();
                 break;
             case 5:
+                printf("+-------------------+-------------------+-------------------+\n");
+                printf("| %-17s | %-17s | %-17s |\n", "Nomor Kamar", "Tipe Kamar", "Status");
+                printf("+-------------------+-------------------+-------------------+\n");
+                displayAvailableRooms(roomTree);
+                printf("+-------------------+-------------------+-------------------+\n");
+                getch();
                 break;
             case 6:
                 break;
@@ -191,4 +219,66 @@ void displayGuests(Guest *head) {
     }
 
     printf("+-------------------+-------------------+-------------------+-------------------+\n");
+}
+
+void addRoom(RoomNode **root, char *roomType, char *roomNumber) {
+    int isAdded = 0;
+
+    do {
+        if (*root == NULL) {
+            *root = (RoomNode *)malloc(sizeof(RoomNode));
+            if (*root == NULL) {
+                printf("Alokasi memori gagal. Tidak dapat menambahkan kamar.\n");
+                return;
+            }
+            strcpy((*root)->roomType, roomType);
+            strcpy((*root)->roomNumber, roomNumber);
+            (*root)->isAvailable = 1;
+            (*root)->left = (*root)->right = NULL;
+            printf("Kamar dengan nomor %s berhasil ditambahkan.\n", roomNumber);
+            isAdded = 1;
+        } else if (strcmp(roomNumber, (*root)->roomNumber) < 0) {
+            addRoom(&(*root)->left, roomType, roomNumber);
+            isAdded = 1;
+        } else if (strcmp(roomNumber, (*root)->roomNumber) > 0) {
+            addRoom(&(*root)->right, roomType, roomNumber);
+            isAdded = 1;
+        } else {
+            printf("Kamar dengan nomor %s sudah ada. Silakan masukkan nomor kamar yang berbeda.\n", roomNumber);
+            printf("Masukkan nomor kamar baru: ");
+            fgets(roomNumber, 10, stdin);
+            roomNumber[strcspn(roomNumber, "\n")] = 0;
+        }
+    } while (!isAdded);
+}
+
+void initRoomData(RoomNode **root) {
+    addRoom(root, "Single", "101");
+    addRoom(root, "Single", "102");
+    addRoom(root, "Double", "201");
+    addRoom(root, "Double", "202");
+    addRoom(root, "Suite", "301");
+    addRoom(root, "Suite", "302");
+}
+
+void displayRooms(RoomNode *root) {
+    if (root != NULL) {
+        displayRooms(root->left);
+        
+        printf("| %-17s | %-17s | %-17s |\n", root->roomNumber, root->roomType, root->isAvailable ? "Tersedia" : "Terisi");
+        
+        displayRooms(root->right);
+    }
+}
+
+void displayAvailableRooms(RoomNode *root) {
+    if (root != NULL) {
+        displayAvailableRooms(root->left);
+        
+        if (root->isAvailable) {
+            printf("| %-17s | %-17s | %-17s |\n", root->roomNumber, root->roomType, "Tersedia");
+        }
+        
+        displayAvailableRooms(root->right);
+    }
 }
